@@ -9,7 +9,8 @@ while(True):
     "2. Get the self IP Address\n" \
     "3. Display the DNS Cache\n" \
     "4. Clear the DNS Cache\n" \
-    "5. Exit\n")
+    "5. Clear Screen\n" \
+    "6. Exit\n")
     option = int(input("> "))
 
     if option == 1:
@@ -28,5 +29,7 @@ while(True):
         output = subprocess.check_output(["ipconfig", "/flushdns"])
         print(output.decode())
         continue;
+    if option == 5:
+        subprocess.call(["clear"])
     else:
         exit(1)
