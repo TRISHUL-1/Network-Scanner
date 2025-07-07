@@ -29,38 +29,55 @@ def scan_ports_multithreading(ip, ports):
     open_ports = []
     threads = []
     for port in ports:
-        t = threading.Thread(target=scan_port, args=(ip, port, open_ports))
-        threads.append(t)
-        t.start()
+        try:
+            t = threading.Thread(target=scan_port, args=(ip, port, open_ports))
+            threads.append(t)
+            t.start()
+        except Exception as e:
+            print(f"Error occured: {e}")
     for t in threads:
         t.join()
     
     print(f"Open ports for {ip}: {open_ports}")
 
-def syn_scan(target_ip, ports, delay=0.5):
+def syn_scan(target_ip, port,open_ports, delay=0.1):
+    
+    src_port = RandShort()
+    pkt = IP(dst=target_ip)/TCP(sport=src_port, dport=port, flags="S")
+
+    response = sr1(pkt, timeout=2, verbose=0)
+
+    if response is None:
+        open_ports[port] = "No Response (filtered or dropped)"      # cant bypass firewall
+
+    elif response.haslayer(TCP):
+        if response[TCP].flags == 0x12:         # bypassed and port is OPEN
+            open_ports[port] = "OPEN"           
+            rst_pkt = IP(dst=target_ip)/TCP(sport=src_port, dport=port, flags="R")
+            sr1(rst_pkt, timeout=2, verbose=0)
+
+    else:
+        print(f"Port {port}: Unexpected response")  # error occured
+        open_ports[port] = "Unexpected response"
+
+    time.sleep(delay)
+
+def syn_scan_multithreading(target_ip, ports):
+    
     print(f"Performing SYN scan on {target_ip}...")
 
+    open_ports = {}
+    threads = []
+
     for port in ports:
-        src_port = RandShort()
-        pkt = IP(dst=target_ip)/TCP(sport=src_port, dport=port, flags="S")
+        t = threading.Thread(target=syn_scan, args=(target_ip, port, open_ports))
+        threads.append(t)
+        t.start()
+    for t in threads:
+        t.join()
 
-        response = sr1(pkt, timeout=2, verbose=0)
-
-        if response is None:
-            print(f"Port {port}: No response (filtered or dropped)")
-        elif response.haslayer(TCP):
-            if response[TCP].flags == 0x12:
-                print(f"Port {port}: OPEN")
-                rst_pkt = IP(dst=target_ip)/TCP(sport=src_port, dport=port, flags="R")
-                sr1(rst_pkt, timeout=2, verbose=0)
-            elif response[TCP].flags == 0x14:
-                print(f"Port {port}: CLOSED")
-            else:
-                print(f"Port {port}: TCP response with flags {response.getlayer(TCP).flags}")
-        else:
-            print(f"Port {port}: Unexpected response")
-
-        time.sleep(delay)
+    for port in open_ports:
+        print(f"{port}: {open_ports[port]}")
 
 
 banner = """
@@ -143,7 +160,8 @@ while True:
         starting_range = int(input("Enter the staring value: "))
         ending_range = int(input("Enter the ending range: "))
 
-        syn_scan(ip, range(starting_range, ending_range))
+
+        syn_scan_multithreading(ip, range(starting_range, ending_range))
 
     elif option == 5:
         exit(1)
