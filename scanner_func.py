@@ -2,6 +2,7 @@ from scapy.all import IP, ICMP, sr1, TCP, RandShort
 import time
 import socket
 import threading
+import ipaddress
 
 
 class Scanners:
@@ -10,18 +11,19 @@ class Scanners:
         pass
 
 
-
     def ping_host(self, ip):
 
         '''Pings the target IP address using ICMP packets'''
 
         print(f"Pinging {ip}...")
-        icmp = IP(dst =ip)/ICMP()
-        resp = sr1(icmp, timeout=2, verbose=0)
-        if resp:
-            print(f"{ip} is alive")
-        else:
-            print(f"{ip} is down")
+        for i in range(0,4):
+            icmp = IP(dst =ip)/ICMP()
+            resp = sr1(icmp, timeout=2, verbose=0)
+            time.sleep(0.5)
+            if resp:
+                print(f"{ip} is alive")
+            else:
+                print(f"{ip} is down")
 
 
 

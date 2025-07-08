@@ -37,7 +37,7 @@ while True:
             ipaddress.ip_address(ip)
         except ValueError:
             print("invalid IP address")
-            exit(1)
+            continue
 
         scanner.ping_host(ip)
 
@@ -48,7 +48,7 @@ while True:
             ipaddress.ip_address(ip)
         except ValueError:
             print("invalid IP address")
-            exit(1)
+            continue
 
         starting_range = int(input("Enter the staring value: "))
         ending_range = int(input("Enter the ending range: "))
@@ -62,12 +62,12 @@ while True:
             ipaddress.ip_address(ip)
         except ValueError:
             print("invalid IP address")
-            exit(1)
+            continue
 
         port = int(input("Enter the port you want to scan: "))
         if port < 1 or port > 65535:
             print("Port number must be between 1 and 65535")
-            exit(1)
+            continue
 
         open_ports = []
 
@@ -85,7 +85,7 @@ while True:
             ipaddress.ip_address(ip)
         except ValueError:
             print("invalid IP address")
-            exit(1)
+            continue
 
         starting_range = int(input("Enter the staring value: "))
         ending_range = int(input("Enter the ending range: "))
